@@ -1,0 +1,1182 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team To-Do List Manager</title>
+
+    <style>
+        :root {
+            --brand: #315bd6;
+            --brand-dark: #2448b5;
+            --ink: #202d45;
+            --muted: #667085;
+            --line: #e5eaf2;
+            --surface: #ffffff;
+            --background: #f5f7fc;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(180deg, #eef3ff 0, var(--background) 260px);
+            color: var(--ink);
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        header {
+            padding: 10px 2px 8px;
+            margin-bottom: 18px;
+        }
+
+        header h1 {
+            margin: 0;
+            color: #172554;
+            font-size: clamp(26px, 3vw, 34px);
+            letter-spacing: -0.8px;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .panel {
+            margin: 18px 0;
+            padding: 24px;
+            background: var(--surface);
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(31, 41, 55, 0.045);
+        }
+
+        .panel > h2 {
+            margin: 0 0 20px;
+            color: var(--ink);
+            font-size: 20px;
+        }
+
+        /* Dashboard cards */
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+            min-height: 116px;
+            padding: 20px 18px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 13px;
+            box-shadow: 0 3px 12px rgba(31, 41, 55, 0.035);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 9px 20px rgba(31, 41, 55, 0.08);
+        }
+
+        .stat-card::before {
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 4px;
+            background: var(--brand);
+            content: "";
+        }
+
+        .stat-card:nth-child(2)::before { background: #d97706; }
+        .stat-card:nth-child(3)::before { background: #2878d0; }
+        .stat-card:nth-child(4)::before { background: #22a447; }
+        .stat-card:nth-child(5)::before { background: #e53935; }
+
+        .stat-card h3 {
+            margin: 0 0 13px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .stat-card p {
+            margin: 0;
+            color: #172554;
+            font-size: 32px;
+            line-height: 1;
+            font-weight: 750;
+        }
+
+        /* Pie chart */
+
+        .chart-panel {
+            margin-top: 20px;
+            padding: 24px;
+            border: 1px solid #e7ebf3;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #fff, #fbfcff);
+        }
+
+        .chart-heading {
+            margin: 0 0 6px;
+            color: var(--ink);
+            font-size: 18px;
+        }
+
+        .chart-subtitle {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .chart-layout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: clamp(24px, 5vw, 64px);
+            padding: 22px 0 5px;
+        }
+
+        .chart-area {
+            position: relative;
+            width: 280px;
+            max-width: 100%;
+            flex-shrink: 0;
+        }
+
+        #task-pie-chart {
+            display: block;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+
+        .chart-segment {
+            fill: none;
+            stroke-width: 30;
+            cursor: pointer;
+            transition: opacity 0.15s ease, stroke-width 0.15s ease;
+            outline: none;
+        }
+
+        .chart-segment:hover,
+        .chart-segment:focus {
+            stroke-width: 35;
+            opacity: 0.88;
+        }
+
+        .chart-center-label {
+            fill: var(--muted);
+            font-size: 12px;
+            text-anchor: middle;
+        }
+
+        .chart-center-count {
+            fill: #263244;
+            font-size: 28px;
+            font-weight: bold;
+            text-anchor: middle;
+        }
+
+        .chart-tooltip {
+            position: absolute;
+            z-index: 5;
+            display: none;
+            min-width: 175px;
+            max-width: 230px;
+            padding: 11px 13px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.13);
+            color: var(--ink);
+            font-size: 13px;
+            line-height: 1.7;
+            pointer-events: none;
+        }
+
+        .chart-tooltip strong {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .chart-legend {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 16px;
+            min-width: 150px;
+            max-width: 250px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 5px;
+            flex-shrink: 0;
+        }
+
+        .legend-title {
+            margin: 0;
+            color: #344054;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .chart-empty {
+            display: none;
+            padding: 10px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 13px;
+        }
+
+        /* Forms and filters */
+
+        .form-grid,
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            min-width: 0;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            color: #344054;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            min-width: 0;
+            min-height: 42px;
+            padding: 10px 11px;
+            border: 1px solid #d8deea;
+            border-radius: 8px;
+            background: #fff;
+            color: var(--ink);
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        textarea {
+            min-height: 85px;
+            resize: vertical;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #5278e8;
+            box-shadow: 0 0 0 3px rgba(49, 91, 214, 0.12);
+        }
+
+        /* Buttons */
+
+        button,
+        .button {
+            display: inline-block;
+            padding: 10px 14px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: var(--brand);
+            color: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease,
+                background 0.15s ease;
+        }
+
+        button:hover,
+        .button:hover {
+            background: var(--brand-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(49, 91, 214, 0.15);
+        }
+
+        button:focus-visible,
+        .button:focus-visible {
+            outline: 3px solid #c7d7fe;
+            outline-offset: 2px;
+        }
+
+        .secondary { background: #667085; }
+        .secondary:hover { background: #475467; }
+        .danger { background: #c9362b; }
+        .danger:hover { background: #a8271e; }
+        .success { background: #16803d; }
+        .success:hover { background: #11652f; }
+
+        .button-row,
+        .filter-actions,
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .button-row,
+        .filter-actions {
+            margin-top: 16px;
+        }
+
+        /* Flash messages */
+
+        .message {
+            margin: 12px 0;
+            padding: 12px 14px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+
+        .message.success {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        /* Task table */
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            min-width: 1350px;
+            border-collapse: collapse;
+            background: #fff;
+        }
+
+        th,
+        td {
+            padding: 13px 11px;
+            border-bottom: 1px solid #eaecf0;
+            text-align: left;
+            vertical-align: top;
+            font-size: 13px;
+        }
+
+        th {
+            background: #f4f7fc;
+            color: #344054;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: #fafcff;
+        }
+
+        td form {
+            margin: 0;
+        }
+
+        .task-title {
+            display: block;
+            margin: 0 0 8px;
+            padding: 0;
+            color: #263244;
+            font-weight: 650;
+            line-height: 1.4;
+            text-align: left;
+            text-indent: 0;
+        }
+
+        .inline-description {
+            display: block;
+            max-width: 250px;
+            margin: 0;
+            padding: 0;
+            text-align: left;
+            text-indent: 0;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            line-height: 1.45;
+            color: var(--muted);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .status-form select {
+            min-width: 125px;
+        }
+
+        .action-buttons button {
+            padding: 8px 10px;
+        }
+
+        .edit-fields {
+            display: grid;
+            gap: 8px;
+            min-width: 190px;
+            margin-top: 12px;
+            padding: 12px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: #f8faff;
+        }
+
+        .edit-fields[hidden] {
+            display: none !important;
+        }
+
+        .edit-fields label {
+            margin-top: 3px;
+        }
+
+        .empty-state {
+            padding: 28px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        /* Responsive layout */
+
+        @media (max-width: 1100px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .form-grid,
+            .filter-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 650px) {
+            body {
+                padding: 12px;
+            }
+
+            header {
+                padding: 6px 2px;
+            }
+
+            .panel {
+                padding: 16px;
+                border-radius: 12px;
+            }
+
+            .panel > h2 {
+                font-size: 18px;
+                margin-bottom: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .stat-card {
+                min-height: 104px;
+                padding: 16px 13px;
+            }
+
+            .stat-card h3 { font-size: 12px; }
+            .stat-card p { font-size: 28px; }
+
+            .form-grid,
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .full-width {
+                grid-column: auto;
+            }
+
+            .chart-panel {
+                padding: 16px;
+            }
+
+            .chart-layout {
+                gap: 20px;
+            }
+
+            .chart-area {
+                width: 245px;
+            }
+
+            .chart-legend {
+                min-width: 0;
+                width: 100%;
+                max-width: 245px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <header>
+        <h1>Team To-Do List Manager</h1>
+        <p class="subtitle">
+            Create, assign, track, and manage your team's tasks.
+        </p>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Dashboard -->
+    <section class="panel">
+        <h2>Dashboard Overview</h2>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Tasks</h3>
+                <p>{{ stats.total_tasks }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Pending</h3>
+                <p>{{ stats.pending_tasks }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>In Progress</h3>
+                <p>{{ stats.in_progress_tasks }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Completed</h3>
+                <p>{{ stats.completed_tasks }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Urgent Tasks</h3>
+                <p>{{ stats.urgent_tasks }}</p>
+            </div>
+        </div>
+
+        <div class="chart-panel">
+            <h3 class="chart-heading">Quick Task Distribution</h3>
+            <p class="chart-subtitle">
+                Hover over a segment to see its task details.
+            </p>
+
+            <div class="chart-layout">
+                <div class="chart-area">
+                    <svg id="task-pie-chart"
+                         viewBox="0 0 240 240"
+                         role="img"
+                         aria-label="Task distribution pie chart">
+
+                        <circle cx="120" cy="120" r="78"
+                                fill="none"
+                                stroke="#eef1f6"
+                                stroke-width="30"></circle>
+
+                        <g id="chart-segments"></g>
+
+                        <text x="120" y="113"
+                              class="chart-center-label">Total Tasks</text>
+
+                        <text x="120" y="145"
+                              class="chart-center-count"
+                              id="chart-total">0</text>
+                    </svg>
+
+                    <div id="chart-tooltip" class="chart-tooltip"></div>
+                </div>
+
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-swatch" style="background:#22a447"></span>
+                        <p class="legend-title">Green — Completed</p>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-swatch" style="background:#e53935"></span>
+                        <p class="legend-title">Red — Urgent</p>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-swatch" style="background:#f28c28"></span>
+                        <p class="legend-title">Orange — High</p>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-swatch" style="background:#e5b700"></span>
+                        <p class="legend-title">Yellow — Medium</p>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-swatch" style="background:#2878d0"></span>
+                        <p class="legend-title">Blue — Low</p>
+                    </div>
+                </div>
+            </div>
+
+            <p id="chart-empty" class="chart-empty">
+                No tasks available to display yet.
+            </p>
+        </div>
+    </section>
+
+    <!-- Add task -->
+    <section class="panel">
+        <h2>Add New Task</h2>
+
+        <form action="{{ url_for('add_task') }}" method="POST">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="title">Task Title *</label>
+                    <input type="text" id="title" name="title"
+                           maxlength="150" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="created_by">Created By *</label>
+                    <input type="text" id="created_by" name="created_by"
+                           maxlength="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="assigned_to">Assigned To *</label>
+                    <input type="text" id="assigned_to" name="assigned_to"
+                           maxlength="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="priority">Priority *</label>
+                    <select id="priority" name="priority" required>
+                        <option value="">Select priority</option>
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                        <option value="Urgent">Urgent</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Initial Status *</label>
+                    <select id="status" name="status" required>
+                        <option value="">Select status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="due_date">Due Date and Time *</label>
+                    <input type="datetime-local" id="due_date"
+                           name="due_date" required>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description"
+                              placeholder="Enter task details (optional)"></textarea>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button type="submit">Add Task</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Search and filters -->
+    <section class="panel">
+        <h2>Search and Filter Tasks</h2>
+
+        <form action="{{ url_for('home') }}" method="GET">
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label for="search">Search</label>
+                    <input type="search" id="search" name="search"
+                           value="{{ search_query }}"
+                           placeholder="Task number, title, description">
+                </div>
+
+                <div class="form-group">
+                    <label for="filter-status">Status</label>
+                    <select id="filter-status" name="status">
+                        <option value="">All statuses</option>
+                        {% for status in ["Pending", "In Progress", "Completed"] %}
+                            <option value="{{ status }}"
+                                {% if status_filter == status %}selected{% endif %}>
+                                {{ status }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="filter-priority">Priority</label>
+                    <select id="filter-priority" name="priority">
+                        <option value="">All priorities</option>
+                        {% for priority in ["Low", "Medium", "High", "Urgent"] %}
+                            <option value="{{ priority }}"
+                                {% if priority_filter == priority %}selected{% endif %}>
+                                {{ priority }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="filter-assigned">Assigned To</label>
+                    <select id="filter-assigned" name="assigned_to">
+                        <option value="">All team members</option>
+                        {% for member in team_members %}
+                            <option value="{{ member.assigned_to }}"
+                                {% if assigned_filter == member.assigned_to %}selected{% endif %}>
+                                {{ member.assigned_to }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="filter-creator">Created By</label>
+                    <select id="filter-creator" name="created_by">
+                        <option value="">All creators</option>
+                        {% for creator in task_creators %}
+                            <option value="{{ creator.created_by }}"
+                                {% if created_by_filter == creator.created_by %}selected{% endif %}>
+                                {{ creator.created_by }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="sort">Sort By</label>
+                    <select id="sort" name="sort">
+                        <option value="oldest" {% if sort_by == "oldest" %}selected{% endif %}>Oldest first</option>
+                        <option value="newest" {% if sort_by == "newest" %}selected{% endif %}>Newest first</option>
+                        <option value="priority" {% if sort_by == "priority" %}selected{% endif %}>Priority</option>
+                        <option value="due_date" {% if sort_by == "due_date" %}selected{% endif %}>Due date</option>
+                        <option value="title" {% if sort_by == "title" %}selected{% endif %}>Title A–Z</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button type="submit">Apply Filters</button>
+                <a href="{{ url_for('home') }}" class="button secondary">Clear Filters</a>
+            </div>
+        </form>
+    </section>
+
+    <!-- Task table -->
+    <section class="panel">
+        <h2>Task List</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Task Number</th>
+                        <th>Task Details</th>
+                        <th>Created By</th>
+                        <th>Assigned To</th>
+                        <th>Priority</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Completed At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for task in tasks %}
+                    <tr>
+                        <td>{{ task.serial_number }}</td>
+                        <td>{{ task.task_number }}</td>
+
+                        <td>
+                            <p class="task-title">{{ task.title }}</p>
+
+                            {% if task.description %}
+                                <p class="inline-description">{{ task.description }}</p>
+                            {% endif %}
+
+                            <form class="edit-fields"
+                                  id="edit-form-{{ task.id }}"
+                                  action="{{ url_for('edit_task', task_id=task.id) }}"
+                                  method="POST"
+                                  hidden>
+
+                                <label for="edit-title-{{ task.id }}">Task Title *</label>
+                                <input type="text"
+                                       id="edit-title-{{ task.id }}"
+                                       name="title"
+                                       maxlength="150"
+                                       value="{{ task.title }}"
+                                       required>
+
+                                <label for="edit-description-{{ task.id }}">Description</label>
+                                <textarea id="edit-description-{{ task.id }}"
+                                          name="description">{{ task.description or "" }}</textarea>
+
+                                <label for="edit-created-by-{{ task.id }}">Created By *</label>
+                                <input type="text"
+                                       id="edit-created-by-{{ task.id }}"
+                                       name="created_by"
+                                       maxlength="100"
+                                       value="{{ task.created_by }}"
+                                       required>
+
+                                <label for="edit-assigned-to-{{ task.id }}">Assigned To *</label>
+                                <input type="text"
+                                       id="edit-assigned-to-{{ task.id }}"
+                                       name="assigned_to"
+                                       maxlength="100"
+                                       value="{{ task.assigned_to }}"
+                                       required>
+
+                                <label for="edit-priority-{{ task.id }}">Priority *</label>
+                                <select id="edit-priority-{{ task.id }}" name="priority" required>
+                                    {% for priority in ["Low", "Medium", "High", "Urgent"] %}
+                                        <option value="{{ priority }}"
+                                            {% if task.priority == priority %}selected{% endif %}>
+                                            {{ priority }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+
+                                <label for="edit-due-date-{{ task.id }}">Due Date and Time *</label>
+                                <input type="datetime-local"
+                                       id="edit-due-date-{{ task.id }}"
+                                       name="due_date"
+                                       value="{{ task.due_date.strftime('%Y-%m-%dT%H:%M') if task.due_date else '' }}"
+                                       required>
+
+                                <label for="edit-status-{{ task.id }}">Status *</label>
+                                <select id="edit-status-{{ task.id }}" name="status" required>
+                                    {% for status in ["Pending", "In Progress", "Completed"] %}
+                                        <option value="{{ status }}"
+                                            {% if task.status == status %}selected{% endif %}>
+                                            {{ status }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+
+                                <div class="action-buttons">
+                                    <button type="submit" class="success">Save</button>
+                                    <button type="button"
+                                            class="secondary"
+                                            onclick="toggleEdit({{ task.id }}, false)">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </td>
+
+                        <td>{{ task.created_by }}</td>
+                        <td>{{ task.assigned_to }}</td>
+                        <td>{{ task.priority }}</td>
+
+                        <td>
+                            {% if task.due_date %}
+                                {{ task.due_date.strftime('%d-%m-%Y %I:%M %p') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <form class="status-form"
+                                  action="{{ url_for('update_status', task_id=task.id) }}"
+                                  method="POST">
+
+                                <select name="status"
+                                        aria-label="Change status for {{ task.task_number }}"
+                                        onchange="this.form.submit()">
+                                    {% for status in ["Pending", "In Progress", "Completed"] %}
+                                        <option value="{{ status }}"
+                                            {% if task.status == status %}selected{% endif %}>
+                                            {{ status }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </td>
+
+                        <td>
+                            {% if task.created_at %}
+                                {{ task.created_at.strftime('%d-%m-%Y %I:%M %p') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <!-- New Completed At column -->
+                        <td>
+                            {% if task.completed_at %}
+                                {{ task.completed_at.strftime('%d-%m-%Y %I:%M %p') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="action-buttons">
+                                <button type="button"
+                                        onclick="toggleEdit({{ task.id }}, true)">
+                                    Edit
+                                </button>
+
+                                <form action="{{ url_for('delete_task', task_id=task.id) }}"
+                                      method="POST"
+                                      onsubmit="return confirm('Are you sure you want to delete this task?');">
+                                    <button type="submit" class="danger">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="11" class="empty-state">
+                            No tasks found. Add a task or change your filters.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    function toggleEdit(taskId, show) {
+        const form = document.getElementById("edit-form-" + taskId);
+
+        if (form) {
+            form.hidden = !show;
+        }
+    }
+
+    const chartData = {{ chart_data | tojson }};
+
+    function buildTaskChart() {
+        const svg = document.getElementById("task-pie-chart");
+        const segments = document.getElementById("chart-segments");
+        const tooltip = document.getElementById("chart-tooltip");
+        const emptyMessage = document.getElementById("chart-empty");
+
+        const colors = {
+            completed: "#22a447",
+            urgent: "#e53935",
+            high: "#f28c28",
+            medium: "#e5b700",
+            low: "#2878d0"
+        };
+
+        const categories = [
+            {
+                key: "completed",
+                label: "Completed",
+                count: Number(chartData.completed) || 0,
+                color: colors.completed
+            },
+            {
+                key: "urgent",
+                label: "Urgent",
+                pending: Number(chartData.urgent.pending) || 0,
+                inProgress: Number(chartData.urgent.in_progress) || 0,
+                color: colors.urgent
+            },
+            {
+                key: "high",
+                label: "High",
+                pending: Number(chartData.high.pending) || 0,
+                inProgress: Number(chartData.high.in_progress) || 0,
+                color: colors.high
+            },
+            {
+                key: "medium",
+                label: "Medium",
+                pending: Number(chartData.medium.pending) || 0,
+                inProgress: Number(chartData.medium.in_progress) || 0,
+                color: colors.medium
+            },
+            {
+                key: "low",
+                label: "Low",
+                pending: Number(chartData.low.pending) || 0,
+                inProgress: Number(chartData.low.in_progress) || 0,
+                color: colors.low
+            }
+        ];
+
+        categories.forEach(category => {
+            if (category.key !== "completed") {
+                category.count = category.pending + category.inProgress;
+            }
+        });
+
+        const total = Number(chartData.total_tasks) || 0;
+
+        document.getElementById("chart-total").textContent = total;
+        segments.replaceChildren();
+
+        if (total === 0) {
+            emptyMessage.style.display = "block";
+            tooltip.style.display = "none";
+            return;
+        }
+
+        emptyMessage.style.display = "none";
+
+        const radius = 78;
+        const circumference = 2 * Math.PI * radius;
+        let offset = 0;
+
+        categories.filter(category => category.count > 0).forEach(category => {
+            const segmentLength = (category.count / total) * circumference;
+
+            const circle = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "circle"
+            );
+
+            circle.setAttribute("cx", "120");
+            circle.setAttribute("cy", "120");
+            circle.setAttribute("r", radius);
+            circle.setAttribute("class", "chart-segment");
+            circle.setAttribute("stroke", category.color);
+            circle.setAttribute(
+                "stroke-dasharray",
+                `${segmentLength} ${circumference - segmentLength}`
+            );
+            circle.setAttribute("stroke-dashoffset", -offset);
+            circle.setAttribute("transform", "rotate(-90 120 120)");
+            circle.setAttribute("tabindex", "0");
+            circle.setAttribute("role", "img");
+
+            circle.setAttribute(
+                "aria-label",
+                category.key === "completed"
+                    ? `${category.label}: ${category.count}`
+                    : `${category.label}: Pending ${category.pending}, In Progress ${category.inProgress}`
+            );
+
+            function showTooltip(event) {
+                let details = `<strong>${category.label}</strong>`;
+
+                if (category.key === "completed") {
+                    details += `Completed tasks: ${category.count}`;
+                } else {
+                    details +=
+                        `Pending: ${category.pending}<br>` +
+                        `In Progress: ${category.inProgress}<br>` +
+                        `Total: ${category.count}`;
+                }
+
+                tooltip.innerHTML = details;
+                tooltip.style.display = "block";
+
+                if (event && event.clientX) {
+                    const bounds = svg.getBoundingClientRect();
+
+                    tooltip.style.left = Math.max(
+                        0,
+                        Math.min(
+                            event.clientX - bounds.left + 10,
+                            bounds.width - 230
+                        )
+                    ) + "px";
+
+                    tooltip.style.top =
+                        Math.max(0, event.clientY - bounds.top) + "px";
+                } else {
+                    tooltip.style.left = "10px";
+                    tooltip.style.top = "10px";
+                }
+            }
+
+            circle.addEventListener("pointermove", showTooltip);
+
+            circle.addEventListener("pointerleave", () => {
+                tooltip.style.display = "none";
+            });
+
+            circle.addEventListener("focus", () => {
+                showTooltip(null);
+            });
+
+            circle.addEventListener("blur", () => {
+                tooltip.style.display = "none";
+            });
+
+            segments.appendChild(circle);
+            offset += segmentLength;
+        });
+    }
+
+    buildTaskChart();
+</script>
+
+</body>
+</html>
