@@ -1,127 +1,97 @@
-# To-Do List Manager
+ Team To-Do List Manager
 
-A web-based task management application built using Python, Flask, and MySQL. It helps users create, organize, track, and manage team tasks through a simple dashboard.
+A web-based task management application built using Python, Flask, and MySQL. The application enables teams to create, assign, prioritize, and track tasks through a centralized dashboard.
 
-## Features
+ Features
 
-- Create, edit, and delete tasks
-- Assign tasks to team members
-- Track task status: Pending, In Progress, and Completed
-- Set task priorities: Low, Medium, High, and Urgent
-- Set due dates and times
-- Automatically record task completion timestamps
-- Dashboard with task statistics
-- Visual chart showing task status and priority
-- Search tasks by task number, title, or description
-- Filter tasks by status, priority, creator, and assignee
-- Sort tasks by creation order, priority, due date, or title
-- Store task information in a MySQL database
+- Task creation, editing, and deletion.
+- Unique task reference number generation.
+- Task assignment and ownership tracking.
+- Status and priority management.
+- Due date and completion timestamp tracking.
+- Dashboard with task statistics and visual analytics.
+- Search, filtering, and sorting functionality.
 
-## Technologies Used
+ Tech Stack
 
-- **Python** — application logic
-- **Flask** — web framework
-- **MySQL** — relational database
-- **mysql-connector-python** — Python-to-MySQL connection
-- **HTML and CSS** — user interface
-- **python-dotenv** — environment variable configuration
+- Backend: Python, Flask
+- Database: MySQL
+- Frontend: HTML, CSS, JavaScript
+- Database Connector: MySQL Connector/Python
+- Configuration: Python-dotenv
+- Version Control: Git, GitHub
 
-## Project Structure
+ Project Structure
 
-```text
+
 to_do_app/
-├── app.py
-├── db.py
-├── requirements.txt
-├── .gitignore
-├── .env
+├── static/
+│   └── style.css
 ├── templates/
 │   └── index.html
-└── static/
-```
+├── app.py
+├── db.py
+├── database.sql
+├── requirements.txt
+├── .env.example
+├── .gitignore
+└── README.md
 
-The `.env` file and `.venv/` directory are local files and should not be committed to GitHub.
 
-## Prerequisites
+ Setup and Execution
 
-- Python installed
-- MySQL Server installed and running
-- Git installed (for GitHub upload)
+ Prerequisites
 
-## Setup and Installation
+- Python
+- MySQL Server
+- Git
 
-### 1. Clone the repository
+ 1. Clone the Repository
 
-```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
-cd to_do_app
-```
 
-### 2. Create a virtual environment
+git clone https://github.com/salman-610/Todo-List-Manager.git
+cd Todo-List-Manager
 
-```bash
+
+ 2. Install Dependencies
+
+
 python -m venv .venv
-```
+python -m pip install -r requirements.txt
 
-Activate it on Windows Command Prompt:
 
-```bat
-.venv\Scripts\activate.bat
-```
+Activate the virtual environment before running the application.
 
-### 3. Install dependencies
+ 3. Database Setup
 
-```bash
-pip install -r requirements.txt
-```
+Execute 'database.sql' against your MySQL Server.
 
-### 4. Create the MySQL database
+The script initializes the 'todo_db' database and creates the 'tasks' table with the required columns, constraints, default values, and indexes.
 
-Open MySQL Workbench and execute:
+ 4. Environment Configuration
 
-```sql
-CREATE DATABASE todo_db;
-USE todo_db;
-```
+Create a '.env' file using '.env.example' as a template and configure the database credentials and Flask secret key.
 
-Create the `tasks` table using the schema documented for this project.
+ 5. Run the Application
 
-### 5. Configure environment variables
 
-Create a `.env` file in the project root. Add your own local database credentials and a newly generated Flask secret key:
-
-```text
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_mysql_password
-DB_NAME=todo_db
-FLASK_SECRET_KEY=your_new_secret_key
-```
-
-Use the variable names expected by your `db.py` file. Never commit `.env` or publish passwords and secret keys.
-
-### 6. Run the application
-
-```bash
 python app.py
-```
 
-Open the local address displayed in your terminal, typically:
 
-```text
-http://127.0.0.1:5000
-```
+Application URL: 'http://127.0.0.1:5000/'
 
-## Database
+ Database Schema
 
-The application uses MySQL to store tasks, task numbers, descriptions, creators, assignees, priorities, statuses, due dates, creation timestamps, and completion timestamps.
+ tasks
 
-## Future Improvements
+Stores task identifiers, descriptions, ownership details, status, priority, creation timestamp, due date, and completion timestamp.
 
-- User authentication
-- Deployment to a hosting platform
-- Automated tests
+ Configuration Notes
 
-## Author
+- Database credentials and application settings are managed through environment variables.
+- 'database.sql' provides reproducible database initialization.
+- Sensitive configuration files and virtual environments are excluded from version control.
 
-Python development project created as part of a hands-on Python project portfolio.
+ Author
+
+Salman
